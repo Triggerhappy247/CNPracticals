@@ -11,6 +11,7 @@ public class SocketTestClient {
     public static void main(String args[]){
         try {
             Socket clientSocket = new Socket("127.0.0.1",800);
+            System.out.println("Connected!" + clientSocket.getInetAddress()+":"+clientSocket.getPort());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
             Scanner scanner = new Scanner(System.in);

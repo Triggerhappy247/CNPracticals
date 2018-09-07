@@ -14,7 +14,7 @@ public class SocketTestServer {
             ObjectInputStream objectInputStream;
             ObjectOutputStream objectOutputStream;
             Socket socket = serverSocket.accept();
-            System.out.println("Connected!");
+            System.out.println("Connected!" + socket.getInetAddress()+":"+socket.getPort());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             Frame received;
