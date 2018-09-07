@@ -10,10 +10,6 @@ public class NetworkPacket implements Serializable {
         setData(new byte[Protocol.MAX_PKT_SIZE]);
     }
 
-    public NetworkPacket(byte[] data) {
-        this.data = data;
-    }
-
     public byte[] getData() {
         return data;
     }
