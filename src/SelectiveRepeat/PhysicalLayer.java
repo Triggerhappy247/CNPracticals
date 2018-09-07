@@ -5,6 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PhysicalLayer {
 
@@ -12,14 +14,21 @@ public class PhysicalLayer {
     private ServerSocket serverSocket;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
+    private Frame frame;
+    private FrameArrival frameArrival;
+    private boolean isCommunicationDone;
+    private List<PhysicalLayerListener> physicalLayerListeners = new ArrayList<>();
+
 
     public PhysicalLayer(int port) {
         try {
             setServerSocket(new ServerSocket(port));
+            setCommunicationDone(false);
             System.out.println("Sender Listening...");
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
+            setFrameArrival(new FrameArrival(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -27,10 +36,12 @@ public class PhysicalLayer {
 
     public PhysicalLayer(String host,int port) {
         try {
+            setCommunicationDone(false);
             System.out.println("Receiver Requesting...");
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
+            setFrameArrival(new FrameArrival(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,19 +61,10 @@ public class PhysicalLayer {
     }
 
     public Frame fromPhysicalLayer(){
-        Frame frame;
-        try {
-            frame = (Frame) objectInputStream.readObject();
-            return frame;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
+        Frame frame = getFrame();
+        notify();
+        return frame;
     }
-
-
 
     public Socket getSocket() {
         return socket;
@@ -95,4 +97,41 @@ public class PhysicalLayer {
     public void setObjectOutputStream(ObjectOutputStream objectOutputStream) {
         this.objectOutputStream = objectOutputStream;
     }
+
+    public Frame getFrame() {
+        return frame;
+    }
+
+    public void setFrame(Frame frame) {
+        try {
+            this.frame = frame;
+            wait();
+            for (PhysicalLayerListener pll : physicalLayerListeners) {
+                pll.onFrameArrival();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public FrameArrival getFrameArrival() {
+        return frameArrival;
+    }
+
+    public void setFrameArrival(FrameArrival frameArrival) {
+        this.frameArrival = frameArrival;
+    }
+
+    public boolean isCommunicationDone() {
+        return isCommunicationDone;
+    }
+
+    public void setCommunicationDone(boolean communicationDone) {
+        isCommunicationDone = communicationDone;
+    }
+
+    public void addPhysicalLayerListener(PhysicalLayerListener physicalLayerListener){
+        physicalLayerListeners.add(physicalLayerListener);
+    }
+
 }

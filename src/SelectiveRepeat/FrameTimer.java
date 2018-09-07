@@ -30,7 +30,7 @@ public class FrameTimer {
     }
 
     public void startFrameTimer(int sequenceNumber){
-        timerArrayList.add(sequenceNumber,new Timer());
+        timerArrayList.add(sequenceNumber,new Timer(String.valueOf(sequenceNumber)));
         timerArrayList.get(sequenceNumber).schedule(getFrameTimeOut(),1000);
     }
 
