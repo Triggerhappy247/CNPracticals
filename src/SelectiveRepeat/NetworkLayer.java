@@ -4,6 +4,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NetworkLayer {
 
@@ -12,7 +14,8 @@ public class NetworkLayer {
     private NetworkPacket networkPacket;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
-    private boolean isLayerEnabled;
+    private boolean isLayerEnabled,isPacketSet;
+    private List<NetworkEventListener> networkEventListeners = new ArrayList<>();
 
     public NetworkLayer(String filename,int mode) {
         setNetworkPacket(new NetworkPacket());
@@ -30,12 +33,26 @@ public class NetworkLayer {
         }
     }
 
+    public void addNetworkEventListener(NetworkEventListener networkEventListener){
+        networkEventListeners.add(networkEventListener);
+    }
+
     public NetworkPacket getNetworkPacket() {
         return networkPacket;
     }
 
     public void setNetworkPacket(NetworkPacket networkPacket) {
-        this.networkPacket = networkPacket;
+        try {
+            this.networkPacket = networkPacket;
+            wait();
+            if(isLayerEnabled()){
+                for (NetworkEventListener nel : networkEventListeners){
+                    nel.onNetworkLayerReady();
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public FileInputStream getFileInputStream() {
@@ -62,6 +79,14 @@ public class NetworkLayer {
         isLayerEnabled = layerEnabled;
     }
 
+    public boolean isPacketSet() {
+        return isPacketSet;
+    }
+
+    public void setPacketSet(boolean packetSet) {
+        isPacketSet = packetSet;
+    }
+
     public void enableNetworkLayer(){
         setLayerEnabled(true);
     }
@@ -79,12 +104,8 @@ public class NetworkLayer {
     }
 
     public NetworkPacket fromNetworkLayer(){
-        NetworkPacket networkPacket = new NetworkPacket();
-        try {
-            fileInputStream.read(networkPacket.getData());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return networkPacket;
+        NetworkPacket networkPacket = getNetworkPacket();
+        notify();
+        return  networkPacket;
     }
 }

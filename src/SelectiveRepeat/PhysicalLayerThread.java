@@ -2,14 +2,14 @@ package SelectiveRepeat;
 
 import java.io.IOException;
 
-public class FrameArrival implements Runnable {
+public class PhysicalLayerThread implements Runnable {
 
     private PhysicalLayer physicalLayer;
     private Thread thread;
 
-    public FrameArrival(PhysicalLayer physicalLayer) {
+    public PhysicalLayerThread(PhysicalLayer physicalLayer) {
         setPhysicalLayer(physicalLayer);
-        thread = new Thread(this,"FrameArrival");
+        thread = new Thread(this,"PhysicalLayerThread");
         thread.start();
     }
 

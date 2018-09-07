@@ -15,8 +15,8 @@ public class PhysicalLayer {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private Frame frame;
-    private FrameArrival frameArrival;
-    private boolean isCommunicationDone;
+    private PhysicalLayerThread physicalLayerThread;
+    private boolean isCommunicationDone,isFrameSet;
     private List<PhysicalLayerListener> physicalLayerListeners = new ArrayList<>();
 
 
@@ -28,7 +28,7 @@ public class PhysicalLayer {
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
-            setFrameArrival(new FrameArrival(this));
+            setPhysicalLayerThread(new PhysicalLayerThread(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,7 +41,7 @@ public class PhysicalLayer {
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
-            setFrameArrival(new FrameArrival(this));
+            setPhysicalLayerThread(new PhysicalLayerThread(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,12 +114,12 @@ public class PhysicalLayer {
         }
     }
 
-    public FrameArrival getFrameArrival() {
-        return frameArrival;
+    public PhysicalLayerThread getPhysicalLayerThread() {
+        return physicalLayerThread;
     }
 
-    public void setFrameArrival(FrameArrival frameArrival) {
-        this.frameArrival = frameArrival;
+    public void setPhysicalLayerThread(PhysicalLayerThread physicalLayerThread) {
+        this.physicalLayerThread = physicalLayerThread;
     }
 
     public boolean isCommunicationDone() {
@@ -128,6 +128,14 @@ public class PhysicalLayer {
 
     public void setCommunicationDone(boolean communicationDone) {
         isCommunicationDone = communicationDone;
+    }
+
+    public boolean isFrameSet() {
+        return isFrameSet;
+    }
+
+    public void setFrameSet(boolean frameSet) {
+        isFrameSet = frameSet;
     }
 
     public void addPhysicalLayerListener(PhysicalLayerListener physicalLayerListener){
