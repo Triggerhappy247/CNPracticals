@@ -106,6 +106,6 @@ public class NetworkLayer {
     public NetworkPacket fromNetworkLayer(){
         NetworkPacket networkPacket = getNetworkPacket();
         notify();
-        return  networkPacket;
+        return networkPacket;
     }
 }
