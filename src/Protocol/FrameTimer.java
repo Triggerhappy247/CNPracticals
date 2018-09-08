@@ -1,12 +1,9 @@
 package Protocol;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
+import java.util.*;
 
 public class FrameTimer {
-    private Timer frameTimer;
-    private FrameTimeOut frameTimeOut;
+    private Map<Integer,Timer> frameTimerMap = new HashMap<>();
     private List<TimeoutEventListener> timeoutEventListeners = new ArrayList<>();
 
     public void addFrameTimerListener(TimeoutEventListener timeoutEventListener){
@@ -17,33 +14,18 @@ public class FrameTimer {
         return timeoutEventListeners;
     }
 
-    public FrameTimer() {
-        setFrameTimer(new Timer());
-        setFrameTimeOut(new FrameTimeOut(this));
+    public void startFrameTimer(int sequenceNumber){
+        Timer frameTimer = new Timer(true);
+        frameTimerMap.put(sequenceNumber,frameTimer);
+        System.out.println("Timer Started for " + sequenceNumber);
+        frameTimer.schedule(new FrameTimeOut(this),1000);
     }
 
-    public Timer getFrameTimer() {
-        return frameTimer;
-    }
-
-    public void setFrameTimer(Timer frameTimer) {
-        this.frameTimer = frameTimer;
-    }
-
-    public FrameTimeOut getFrameTimeOut() {
-        return frameTimeOut;
-    }
-
-    public void setFrameTimeOut(FrameTimeOut frameTimeOut) {
-        this.frameTimeOut = frameTimeOut;
-    }
-
-    public void startFrameTimer(){
-        frameTimer.schedule(getFrameTimeOut(),1000);
-    }
-
-    public void stopFrameTimer(){
+    public void stopFrameTimer(int sequenceNumber){
+        System.out.println("Timer stopped for " + sequenceNumber);
+        Timer frameTimer = frameTimerMap.get(sequenceNumber);
         frameTimer.cancel();
         frameTimer.purge();
+        frameTimerMap.remove(sequenceNumber);
     }
 }

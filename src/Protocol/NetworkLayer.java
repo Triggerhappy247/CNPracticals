@@ -12,7 +12,7 @@ public class NetworkLayer {
 
     public static final int SEND = 0;
     public static final int RECEIVE = 1;
-    private int packetsReceived;
+    private int packetsReceived, packetSent,mode;
     private NetworkPacket networkPacket;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
@@ -25,11 +25,13 @@ public class NetworkLayer {
     public NetworkLayer(String filename,int mode) {
         disableNetworkLayer();
         setPacketSet(false);
+        setMode(mode);
         try {
             if(mode == NetworkLayer.SEND)
             {
                 setFileInputStream(new FileInputStream(filename));
                 setNetworkLayerSendThread(new NetworkLayerSendThread(this));
+                setPacketSent(0);
             }
             else if(mode == NetworkLayer.RECEIVE)
             {
@@ -76,6 +78,7 @@ public class NetworkLayer {
             setFileOutputTimer(new Timer(true));
             fileOutputStream.write(networkPacket.getData());
             packetsReceived++;
+            System.out.println(packetsReceived + " Packets Received");
             fileOutputTimer.schedule(new CloseReceiverTask(this),5000);
         } catch (IOException e) {
             e.printStackTrace();
@@ -91,6 +94,8 @@ public class NetworkLayer {
             }
         }
         NetworkPacket networkPacket = getNetworkPacket();
+        packetSent++;
+        System.out.println(packetSent + " Packets Sent");
         setPacketSet(false);
         notify();
         return networkPacket;
@@ -175,6 +180,14 @@ public class NetworkLayer {
         this.packetsReceived = packetsReceived;
     }
 
+    public int getPacketSent() {
+        return packetSent;
+    }
+
+    public void setPacketSent(int packetSent) {
+        this.packetSent = packetSent;
+    }
+
     public void setFileOutputTimer(Timer fileOutputTimer) {
         this.fileOutputTimer = fileOutputTimer;
     }
@@ -185,5 +198,13 @@ public class NetworkLayer {
 
     public void setNetworkLayerSendThread(NetworkLayerSendThread networkLayerSendThread) {
         this.networkLayerSendThread = networkLayerSendThread;
+    }
+
+    public int getMode() {
+        return mode;
+    }
+
+    public void setMode(int mode) {
+        this.mode = mode;
     }
 }

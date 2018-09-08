@@ -11,12 +11,12 @@ public class Protocol {
         return (sequenceNumber+1) % DataLinkLayer.MAXIMUM_SEQUENCE;
     }
 
-    public static void start_timer(){
-        FRAME_TIMER.startFrameTimer();
+    public static void start_timer(int sequenceNumber){
+        FRAME_TIMER.startFrameTimer(sequenceNumber);
     }
 
-    public static void stop_timer(){
-        FRAME_TIMER.stopFrameTimer();
+    public static void stop_timer(int sequenceNumber){
+        FRAME_TIMER.stopFrameTimer(sequenceNumber);
     }
 
     public static void start_ack_timer(){
@@ -48,14 +48,14 @@ public class Protocol {
         ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(test);
 
         System.out.println("Starting Timers");
-        start_timer();
+        start_timer(1);
         start_ack_timer();
         try {
-            Thread.sleep(100);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        stop_timer();
+        stop_timer(1);
         stop_ack_timer();
 
         System.out.println("Ending Timers");

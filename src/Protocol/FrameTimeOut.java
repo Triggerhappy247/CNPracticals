@@ -23,7 +23,6 @@ public class FrameTimeOut extends TimerTask {
     public void run() {
         for (TimeoutEventListener timeoutEventListener : frameTimer.getTimeoutEventListeners()) {
             timeoutEventListener.onFrameTimeout();
-            frameTimer.stopFrameTimer();
         }
     }
 }

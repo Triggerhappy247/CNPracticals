@@ -5,7 +5,7 @@ import Protocol.TimeoutEventListener;
 
 public class DataLinkLayer implements Runnable, NetworkEventListener, TimeoutEventListener {
 
-    
+
     @Override
     public void onNetworkLayerReady() {
 
