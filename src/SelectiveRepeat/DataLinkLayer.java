@@ -2,6 +2,8 @@ package SelectiveRepeat;
 
 import Protocol.*;
 
+import java.util.Scanner;
+
 
 public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener, Runnable {
     public final static int MAXIMUM_SEQUENCE = 7 ;
@@ -16,13 +18,39 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
     private Thread frameArrival;
     private PhysicalLayer physicalLayer;
 
-
+    //Testing the DLL
     public static void main(String args[]){
-        
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Filename: ");
+        String filename = scanner.nextLine();
+        System.out.println("1.Send\n2.Receive\nChoice:");
+        int choice = scanner.nextInt();
+        NetworkLayer networkLayer;
+        PhysicalLayer physicalLayer;
+        DataLinkLayer dataLinkLayer;
+        switch (choice) {
+            case 1:
+                networkLayer = new NetworkLayer(String.format("C:/Users/qasim/Desktop/Send/%s",filename),NetworkLayer.SEND);
+                physicalLayer = new PhysicalLayer(800);
+                dataLinkLayer = new DataLinkLayer(networkLayer,physicalLayer);
+                break;
+            case 2:
+                networkLayer = new NetworkLayer(String.format("C:/Users/qasim/Desktop/Receive/%s",filename),NetworkLayer.RECEIVE);
+                physicalLayer = new PhysicalLayer("127.0.0.1",800);
+                dataLinkLayer = new DataLinkLayer(networkLayer,physicalLayer);
+                break;
+            default:System.out.println("Incorrect");
+        }
     }
 
-    public DataLinkLayer() {
+    public DataLinkLayer(NetworkLayer networkLayer,PhysicalLayer physicalLayer) {
+        this.networkLayer = networkLayer;
+        this.physicalLayer = physicalLayer;
+        networkLayer.addNetworkEventListener(this);
+        Protocol.FRAME_TIMER.addFrameTimerListener(this);
+        Protocol.ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(this);
         networkLayer.enableNetworkLayer();
+        networkLayer.startReading();
         acknowledgementExpected = 0;
         nextFrame = 0;
         frameExpected = 0;
@@ -47,7 +75,6 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         if(frameType == FrameType.DATA)
             Protocol.start_timer();
         Protocol.stop_ack_timer();
-
     }
 
     @Override
@@ -138,4 +165,5 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
     public void setAcknowledgementExpected(int acknowledgementExpected) {
         this.acknowledgementExpected = acknowledgementExpected;
     }
+
 }

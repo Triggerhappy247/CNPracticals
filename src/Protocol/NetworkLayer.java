@@ -12,7 +12,7 @@ public class NetworkLayer {
 
     public static final int SEND = 0;
     public static final int RECEIVE = 1;
-    private int packetsRecieved;
+    private int packetsReceived;
     private NetworkPacket networkPacket;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
@@ -35,7 +35,7 @@ public class NetworkLayer {
             {
                 setFileOutputStream(new FileOutputStream(filename));
                 setFileOutputTimer(new Timer(true));
-                setPacketsRecieved(0);
+                setPacketsReceived(0);
 
             }
         } catch (FileNotFoundException e) {
@@ -75,7 +75,7 @@ public class NetworkLayer {
             fileOutputTimer.purge();
             setFileOutputTimer(new Timer(true));
             fileOutputStream.write(networkPacket.getData());
-            packetsRecieved++;
+            packetsReceived++;
             fileOutputTimer.schedule(new CloseReceiverTask(this),5000);
         } catch (IOException e) {
             e.printStackTrace();
@@ -111,7 +111,7 @@ public class NetworkLayer {
             @Override
             public void onNetworkLayerReady() {
                 networkLayerReceive.toNetworkLayer(networkLayerSend.fromNetworkLayer());
-                System.out.println(networkLayerReceive.getPacketsRecieved() + " Packets Received");
+                System.out.println(networkLayerReceive.getPacketsReceived() + " Packets Received");
             }
 
         }
@@ -167,12 +167,12 @@ public class NetworkLayer {
         setLayerEnabled(false);
     }
 
-    public int getPacketsRecieved() {
-        return packetsRecieved;
+    public int getPacketsReceived() {
+        return packetsReceived;
     }
 
-    public void setPacketsRecieved(int packetsRecieved) {
-        this.packetsRecieved = packetsRecieved;
+    public void setPacketsReceived(int packetsReceived) {
+        this.packetsReceived = packetsReceived;
     }
 
     public void setFileOutputTimer(Timer fileOutputTimer) {
