@@ -1,4 +1,4 @@
-package SelectiveRepeat;
+package Protocol;
 
 public class FrameType {
     public static final int DATA = 0;

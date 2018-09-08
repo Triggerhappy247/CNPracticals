@@ -1,4 +1,4 @@
-package SelectiveRepeat;
+package Protocol;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -142,4 +142,7 @@ public class PhysicalLayer {
         physicalLayerListeners.add(physicalLayerListener);
     }
 
+    public static void main(String args[]){
+        System.out.println("Testing Physical Layer");
+    }
 }

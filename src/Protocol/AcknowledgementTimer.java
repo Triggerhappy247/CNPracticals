@@ -1,15 +1,26 @@
-package SelectiveRepeat;
+package Protocol;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 
-public class AcknowledgeTimer {
+public class AcknowledgementTimer {
 
     private Timer timer;
     private AcknowledgementTimeOut acknowledgementTimeOut;
+    private List<TimeoutEventListener> timeoutEventListeners = new ArrayList<>();
 
-    public AcknowledgeTimer() {
+    public void addAcknowledgementTimerListener(TimeoutEventListener timeoutEventListener){
+        timeoutEventListeners.add(timeoutEventListener);
+    }
+
+    public List<TimeoutEventListener> getTimeoutEventListeners() {
+        return timeoutEventListeners;
+    }
+
+    public AcknowledgementTimer() {
         setTimer(new Timer());
-        setAcknowledgementTimeOut(new AcknowledgementTimeOut());
+        setAcknowledgementTimeOut(new AcknowledgementTimeOut(this));
     }
 
     public Timer getTimer() {

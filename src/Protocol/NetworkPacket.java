@@ -1,13 +1,14 @@
-package SelectiveRepeat;
+package Protocol;
 
 import java.io.Serializable;
 
 
 public class NetworkPacket implements Serializable {
+    public static final int MAX_PKT_SIZE = 1024;
     private byte data[];
 
-    public NetworkPacket() {
-        setData(new byte[Protocol.MAX_PKT_SIZE]);
+    public NetworkPacket(int size) {
+        setData(new byte[size]);
     }
 
     public byte[] getData() {
