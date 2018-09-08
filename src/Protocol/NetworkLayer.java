@@ -96,6 +96,10 @@ public class NetworkLayer {
         return networkPacket;
     }
 
+    public void startReading(){
+        networkLayerSendThread.startReading();
+    }
+
     //Testing the Network Layer
     //Test Successful
     public static void main(String args[]){
@@ -103,7 +107,7 @@ public class NetworkLayer {
         NetworkLayer networkLayerSend = new NetworkLayer("C:/Users/qasim/Desktop/Send/Star Wars The Clone Wars - S01E01.mp4",NetworkLayer.SEND);
         NetworkLayer networkLayerReceive = new NetworkLayer("C:/Users/qasim/Desktop/Receive/Star Wars The Clone Wars - S01E01.mp4",NetworkLayer.RECEIVE);
         System.out.println("Networks Declared");
-        class Test extends NetworkEventAdaptor{
+        class Test implements NetworkEventListener{
             @Override
             public void onNetworkLayerReady() {
                 networkLayerReceive.toNetworkLayer(networkLayerSend.fromNetworkLayer());
@@ -115,7 +119,7 @@ public class NetworkLayer {
         Test test = new Test();
         networkLayerSend.addNetworkEventListener(test);
         networkLayerSend.enableNetworkLayer();
-        networkLayerSend.getNetworkLayerSendThread().startReading();
+        networkLayerSend.startReading();
     }
 
     public FileInputStream getFileInputStream() {

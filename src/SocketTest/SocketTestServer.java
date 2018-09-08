@@ -21,9 +21,9 @@ public class SocketTestServer {
             while(true)
             {
                 received = PhysicalLayer.fromPhysicalLayer(objectInputStream);
-                System.out.println("Recieved frame " + received.getIntData());
+                System.out.println("Received frame " + received.getIntData());
                 System.out.println("Data is: " + received.getStringData());
-                PhysicalLayer.toPhysicalLayer(new Frame("Recieved Frame",received.getIntData()),objectOutputStream);
+                PhysicalLayer.toPhysicalLayer(new Frame("Received Frame",received.getIntData()),objectOutputStream);
             }
         } catch (IOException e) {
             e.printStackTrace();

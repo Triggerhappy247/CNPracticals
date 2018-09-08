@@ -5,8 +5,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PhysicalLayer {
 
@@ -14,10 +12,7 @@ public class PhysicalLayer {
     private ServerSocket serverSocket;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
-    private Frame frame;
-    private PhysicalLayerThread physicalLayerThread;
-    private boolean isCommunicationDone,isFrameSet;
-    private List<PhysicalLayerListener> physicalLayerListeners = new ArrayList<>();
+    private boolean isCommunicationDone;
 
 
     public PhysicalLayer(int port) {
@@ -28,7 +23,6 @@ public class PhysicalLayer {
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
-            setPhysicalLayerThread(new PhysicalLayerThread(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,15 +35,14 @@ public class PhysicalLayer {
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             setDuplexStreams();
-            setPhysicalLayerThread(new PhysicalLayerThread(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void setDuplexStreams() throws IOException{
-        setObjectInputStream((ObjectInputStream) socket.getInputStream());
-        setObjectOutputStream((ObjectOutputStream) socket.getOutputStream());
+        objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+        objectInputStream = new ObjectInputStream(socket.getInputStream());
     }
 
     public void toPhysicalLayer(Frame frame){
@@ -61,9 +54,24 @@ public class PhysicalLayer {
     }
 
     public Frame fromPhysicalLayer(){
-        Frame frame = getFrame();
-        notify();
-        return frame;
+        try {
+            return (Frame)objectInputStream.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void stopPhysicalLayer(){
+        try {
+            objectInputStream.close();
+            objectOutputStream.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Socket getSocket() {
@@ -98,51 +106,14 @@ public class PhysicalLayer {
         this.objectOutputStream = objectOutputStream;
     }
 
-    public Frame getFrame() {
-        return frame;
-    }
-
-    public void setFrame(Frame frame) {
-        try {
-            this.frame = frame;
-            wait();
-            for (PhysicalLayerListener pll : physicalLayerListeners) {
-                pll.onFrameArrival();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public PhysicalLayerThread getPhysicalLayerThread() {
-        return physicalLayerThread;
-    }
-
-    public void setPhysicalLayerThread(PhysicalLayerThread physicalLayerThread) {
-        this.physicalLayerThread = physicalLayerThread;
-    }
-
     public boolean isCommunicationDone() {
         return isCommunicationDone;
     }
 
     public void setCommunicationDone(boolean communicationDone) {
         isCommunicationDone = communicationDone;
+        if(isCommunicationDone)
+            stopPhysicalLayer();
     }
 
-    public boolean isFrameSet() {
-        return isFrameSet;
-    }
-
-    public void setFrameSet(boolean frameSet) {
-        isFrameSet = frameSet;
-    }
-
-    public void addPhysicalLayerListener(PhysicalLayerListener physicalLayerListener){
-        physicalLayerListeners.add(physicalLayerListener);
-    }
-
-    public static void main(String args[]){
-        System.out.println("Testing Physical Layer");
-    }
 }
