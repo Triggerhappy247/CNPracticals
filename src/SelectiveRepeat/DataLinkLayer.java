@@ -75,15 +75,17 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         if(frameType == FrameType.NAK)
             setNoNAK(false);
         physicalLayer.toPhysicalLayer(frame);
-        //if(frameType == FrameType.DATA)
-            //Protocol.start_timer(sequenceNumber % WINDOW_SIZE);
-        //Protocol.stop_ack_timer();
+        System.out.println("Sending Frame " + sequenceNumber);
+        if(frameType == FrameType.DATA)
+            Protocol.start_timer(sequenceNumber % WINDOW_SIZE);
+        Protocol.stop_ack_timer();
     }
 
     @Override
     public void run() {
         while(true) {
             Frame frame = physicalLayer.fromPhysicalLayer();
+            System.out.println("Frame Arrival");
             if (frame.getFrameType() == FrameType.DATA) {
                 if (frame.getSequenceNumber() != frameExpected && isNoNAK())
                     sendFrame(FrameType.NAK, 0, frameExpected, outBound);
@@ -96,7 +98,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
                         arrived[frameExpected % WINDOW_SIZE] = false;
                         setFrameExpected(Protocol.increment(frameExpected));
                         setTooFar(Protocol.increment(frameExpected));
-                        //Protocol.start_ack_timer();
+                        Protocol.start_ack_timer();
                     }
                 }
             }
@@ -104,7 +106,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
                 sendFrame(FrameType.DATA,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),frameExpected,outBound);
             while (isBetween(acknowledgementExpected,frame.getAcknowledgmentNumber(),nextFrame)){
                 bufferedNum--;
-                //Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
+                Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
                 setAcknowledgementExpected(Protocol.increment(acknowledgementExpected));
             }
             if(bufferedNum < WINDOW_SIZE)
@@ -117,6 +119,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
     @Override
     public void onNetworkLayerReady() {
+        System.out.println("Network Layer Ready");
         bufferedNum++;
         outBound[nextFrame % WINDOW_SIZE] = networkLayer.fromNetworkLayer();
         sendFrame(FrameType.DATA,nextFrame,frameExpected,outBound);
@@ -129,6 +132,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
     @Override
     public void onFrameTimeout() {
+        System.out.println("Frame TimeOut");
         sendFrame(FrameType.DATA,OLDEST_FRAME,frameExpected,outBound);
         if(bufferedNum < WINDOW_SIZE)
             networkLayer.enableNetworkLayer();
@@ -138,6 +142,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
     @Override
     public void onAcknowledgementTimeout() {
+        System.out.println("Acknowledgement Timeout");
         sendFrame(FrameType.ACK,0,frameExpected,outBound);
         if(bufferedNum < WINDOW_SIZE)
             networkLayer.enableNetworkLayer();

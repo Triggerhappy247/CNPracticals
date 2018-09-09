@@ -14,6 +14,7 @@ public class CloseReceiverTask extends TimerTask {
     @Override
     public void run() {
         try {
+            System.out.println("Closing Network Stream - Timeout");
             networkLayer.getFileOutputStream().close();
         } catch (IOException e) {
             e.printStackTrace();

@@ -22,7 +22,8 @@ public class PhysicalLayer {
             System.out.println("Sender Listening...");
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
-            setDuplexStreams();
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -34,15 +35,11 @@ public class PhysicalLayer {
             System.out.println("Receiver Requesting...");
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
-            setDuplexStreams();
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void setDuplexStreams() throws IOException{
-        objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-        objectInputStream = new ObjectInputStream(socket.getInputStream());
     }
 
     public void toPhysicalLayer(Frame frame){

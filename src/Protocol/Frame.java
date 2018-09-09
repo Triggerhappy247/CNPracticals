@@ -8,6 +8,9 @@ public class Frame implements Serializable {
     private int acknowledgmentNumber;
     private int frameType;
 
+    public Frame() {
+    }
+
     public Frame(NetworkPacket networkPacket, int sequenceNumber, int acknowledgmentNumber, int frameType) {
         setNetworkPacket(networkPacket);
         setSequenceNumber(sequenceNumber);

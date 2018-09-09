@@ -4,8 +4,11 @@ import java.io.Serializable;
 
 
 public class NetworkPacket implements Serializable {
-    public static final int MAX_PKT_SIZE = 1024;
+    public transient static final int MAX_PKT_SIZE = 1024;
     private byte data[];
+
+    public NetworkPacket() {
+    }
 
     public NetworkPacket(int size) {
         setData(new byte[size]);
