@@ -15,7 +15,7 @@ public class PhysicalLayerServer {
         }
         frame = new Frame(new NetworkPacket(),0,0,FrameType.STOP);
         server.toPhysicalLayer(frame);
-        server.stopPhysicalLayer();;
+        server.stopPhysicalLayer();
     }
 
 }
