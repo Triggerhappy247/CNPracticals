@@ -75,7 +75,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         System.out.println("Sending Frame " + sequenceNumber);
         if(frameType == FrameType.DATA)
             Protocol.start_timer(sequenceNumber % WINDOW_SIZE);
-        Protocol.stop_ack_timer();
+        //Protocol.stop_ack_timer();
     }
 
     @Override
@@ -99,7 +99,8 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
                     arrived[frameExpected % WINDOW_SIZE] = false;
                     setFrameExpected(Protocol.increment(frameExpected));
                     setTooFar(Protocol.increment(tooFar));
-                    Protocol.start_ack_timer();
+                    onAcknowledgementTimeout();
+                    //Protocol.start_ack_timer();
                 }
             }
         }
@@ -172,5 +173,4 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
     public void setAcknowledgementExpected(int acknowledgementExpected) {
         this.acknowledgementExpected = acknowledgementExpected;
     }
-
 }

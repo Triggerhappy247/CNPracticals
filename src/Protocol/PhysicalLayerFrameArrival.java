@@ -18,7 +18,7 @@ public class PhysicalLayerFrameArrival implements Runnable{
         System.out.println("Thread Running");
         try {
             while (!physicalLayer.isStopFrameArrival()){
-                if(bufferedInputStream.available() >= 1056)
+                if(bufferedInputStream.available() > 0)
                     for (FrameArrivalListener frameArrivalListener : physicalLayer.getFrameArrivalListeners()){
                         frameArrivalListener.onFrameArrival();
                     }
