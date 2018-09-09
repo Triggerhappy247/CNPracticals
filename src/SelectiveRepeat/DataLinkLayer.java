@@ -70,7 +70,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         return (((a <= b) && (b < c)) || ((c < a) && (a <= b)) || ((b < c) && (c < a)));
     }
 
-    public void sendFrame(int frameType,int sequenceNumber,int frameExpected,NetworkPacket networkPacket[]){
+    synchronized public void sendFrame(int frameType,int sequenceNumber,int frameExpected,NetworkPacket networkPacket[]){
         Frame frame = new Frame(networkPacket[sequenceNumber % WINDOW_SIZE],sequenceNumber,(frameExpected + MAXIMUM_SEQUENCE) % (MAXIMUM_SEQUENCE + 1),frameType);
         if(frameType == FrameType.NAK)
             setNoNAK(false);
@@ -78,7 +78,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         System.out.println("Sending Frame " + sequenceNumber);
         if(frameType == FrameType.DATA)
             Protocol.start_timer(sequenceNumber % WINDOW_SIZE);
-        Protocol.stop_ack_timer();
+        //Protocol.stop_ack_timer();
     }
 
     @Override
@@ -98,7 +98,8 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
                         arrived[frameExpected % WINDOW_SIZE] = false;
                         setFrameExpected(Protocol.increment(frameExpected));
                         setTooFar(Protocol.increment(frameExpected));
-                        Protocol.start_ack_timer();
+                        onAcknowledgementTimeout();
+                        //Protocol.start_ack_timer();
                     }
                 }
             }

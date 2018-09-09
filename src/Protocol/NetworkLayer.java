@@ -1,26 +1,23 @@
 package Protocol;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 
 public class NetworkLayer {
 
     public static final int SEND = 0;
     public static final int RECEIVE = 1;
     private int packetsReceived, packetSent,mode;
+    private int fileSize;
     private NetworkPacket networkPacket;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
+    private File file;
     private boolean isLayerEnabled;
     private boolean isPacketSet;
     private NetworkLayerSendThread networkLayerSendThread;
     private List<NetworkEventListener> networkEventListeners = new ArrayList<>();
-    private Timer fileOutputTimer;
 
     public NetworkLayer(String filename,int mode) {
         disableNetworkLayer();
@@ -29,6 +26,7 @@ public class NetworkLayer {
         try {
             if(mode == NetworkLayer.SEND)
             {
+                file = new File(filename);
                 setFileInputStream(new FileInputStream(filename));
                 setNetworkLayerSendThread(new NetworkLayerSendThread(this));
                 setPacketSent(0);
@@ -36,7 +34,6 @@ public class NetworkLayer {
             else if(mode == NetworkLayer.RECEIVE)
             {
                 setFileOutputStream(new FileOutputStream(filename));
-                setFileOutputTimer(new Timer(true));
                 setPacketsReceived(0);
 
             }
@@ -73,13 +70,17 @@ public class NetworkLayer {
 
     public void toNetworkLayer(NetworkPacket networkPacket){
         try {
-            fileOutputTimer.cancel();
-            fileOutputTimer.purge();
-            setFileOutputTimer(new Timer(true));
-            fileOutputStream.write(networkPacket.getData());
-            packetsReceived++;
-            System.out.println(packetsReceived + " Packets Received");
-            fileOutputTimer.schedule(new CloseReceiverTask(this),5000);
+            if(networkPacket.getPacketType() == NetworkPacket.DATA){
+                fileOutputStream.write(networkPacket.getData());
+                packetsReceived++;
+                System.out.println(packetsReceived + " Packets Received");
+                if(packetsReceived == fileSize)
+                    fileOutputStream.close();
+            }
+            else {
+                setFileSize(networkPacket.getPacketType());
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -160,6 +161,7 @@ public class NetworkLayer {
     }
 
     public void enableNetworkLayer(){
+        System.out.println("Network Enabled");
         setLayerEnabled(true);
         if(isPacketSet()) {
             for (NetworkEventListener nel : networkEventListeners){
@@ -169,6 +171,7 @@ public class NetworkLayer {
     }
 
     public void disableNetworkLayer(){
+        System.out.println("Network Disabled");
         setLayerEnabled(false);
     }
 
@@ -188,8 +191,16 @@ public class NetworkLayer {
         this.packetSent = packetSent;
     }
 
-    public void setFileOutputTimer(Timer fileOutputTimer) {
-        this.fileOutputTimer = fileOutputTimer;
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public File getFile() {
+        return file;
     }
 
     public NetworkLayerSendThread getNetworkLayerSendThread() {

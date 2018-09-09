@@ -37,15 +37,18 @@ public class NetworkLayerSendThread implements Runnable{
     public void run() {
         byte data[] = new byte[NetworkPacket.MAX_PKT_SIZE];
         byte packetData[];
-        NetworkPacket networkPacket;
+        NetworkPacket networkPacket = new NetworkPacket(0);
         int bytesRead;
+        networkPacket.setPacketType((int)networkLayer.getFile().length());
+        networkLayer.setNetworkPacket(networkPacket);
         try {
-            while ((bytesRead = networkLayer.getFileInputStream().read(data)) != -1) {
+            while ((bytesRead = networkLayer.getFileInputStream().read(data)) != -1 && bytesRead <= NetworkPacket.MAX_PKT_SIZE) {
                 networkPacket = new NetworkPacket(bytesRead);
                 packetData = networkPacket.getData();
                 for (int i = 0; i < bytesRead; i++) {
                     packetData[i] = data[i];
                 }
+                networkPacket.setPacketType(NetworkPacket.DATA);
                 networkLayer.setNetworkPacket(networkPacket);
             }
             networkLayer.getFileInputStream().close();

@@ -2,13 +2,12 @@ package Protocol;
 
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 
 public class AcknowledgementTimer {
 
-    private LinkedList<Timer> timerList = new LinkedList<>();
+    private Timer timer;
     private AcknowledgementTimeOut acknowledgementTimeOut;
     private List<TimeoutEventListener> timeoutEventListeners = new ArrayList<>();
 
@@ -23,15 +22,15 @@ public class AcknowledgementTimer {
 
     public void startAcknowledgementTimer(){
         Timer timer = new Timer();
-        timerList.add(timer);
         acknowledgementTimeOut = new AcknowledgementTimeOut(this);
-        timer.schedule(acknowledgementTimeOut,1000);
+        System.out.println("Acknowledgement Timer Started");
+        timer.schedule(acknowledgementTimeOut,0);
     }
 
     public void stopAcknowledgementTimer(){
-        if(!timerList.isEmpty())
-        {
-            timerList.removeFirst().cancel();
+        if(timer != null) {
+            System.out.println("Acknowledgment Timer Stopped");
+            timer.cancel();
         }
     }
 }
