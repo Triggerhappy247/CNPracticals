@@ -16,6 +16,6 @@ public class PhysicalLayerClient{
             frame.setAcknowledgmentNumber(frame.getSequenceNumber());
             client.toPhysicalLayer(frame);
         }
-        client.setCommunicationDone(true);
+        client.stopPhysicalLayer();
     }
 }

@@ -36,25 +36,23 @@ public class NetworkLayerSendThread implements Runnable{
     @Override
     public void run() {
         byte data[] = new byte[NetworkPacket.MAX_PKT_SIZE];
-        byte packetData[];
-        NetworkPacket networkPacket = new NetworkPacket(0);
+        NetworkPacket networkPacket;
         int bytesRead;
         try {
-            while ((bytesRead = networkLayer.getFileInputStream().read(data)) != -1 && bytesRead <= NetworkPacket.MAX_PKT_SIZE) {
-                networkPacket = new NetworkPacket(bytesRead);
-                packetData = networkPacket.getData();
-                for (int i = 0; i < bytesRead; i++) {
-                    packetData[i] = data[i];
-                }
+            while ((bytesRead = networkLayer.getFileInputStream().read(data)) != -1) {
+                networkPacket = new NetworkPacket();
+                networkPacket.setSize(bytesRead);
+                networkPacket.setData(data);
                 networkPacket.setPacketType(NetworkPacket.DATA);
                 networkLayer.setNetworkPacket(networkPacket);
+                System.out.println("Bytes Read " + bytesRead);
             }
+            networkPacket = new NetworkPacket();
             networkPacket.setPacketType(NetworkPacket.STOP);
             networkLayer.setNetworkPacket(networkPacket);
             networkLayer.getFileInputStream().close();
-            for (NetworkEventListener nel : networkLayer.getNetworkEventListeners()){
-                nel.onClose();
-            }
+            networkLayer.setDone(true);
+            System.out.println("Sender Network Layer STOP");
         } catch (IOException e) {
                 e.printStackTrace();
         }

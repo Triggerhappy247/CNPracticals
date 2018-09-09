@@ -12,13 +12,12 @@ public class PhysicalLayer {
     private ServerSocket serverSocket;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
-    private boolean isCommunicationDone;
-
+    private int frameSent,frameReceived;
 
     public PhysicalLayer(int port) {
         try {
+            frameSent = frameReceived = 0;
             setServerSocket(new ServerSocket(port));
-            setCommunicationDone(false);
             System.out.println("Sender Listening...");
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
@@ -31,7 +30,7 @@ public class PhysicalLayer {
 
     public PhysicalLayer(String host,int port) {
         try {
-            setCommunicationDone(false);
+            frameSent = frameReceived = 0;
             System.out.println("Receiver Requesting...");
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
@@ -45,6 +44,8 @@ public class PhysicalLayer {
     public void toPhysicalLayer(Frame frame){
         try {
             objectOutputStream.writeObject(frame);
+            frameSent++;
+            System.out.println(frameSent + " frames Sent");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,16 +53,17 @@ public class PhysicalLayer {
 
     public Frame fromPhysicalLayer(){
         try {
+            frameReceived++;
+            System.out.println(frameReceived + " frames Received");
             return (Frame)objectInputStream.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
     }
 
     public void stopPhysicalLayer(){
+        System.out.println("Physical Layer Done");
         try {
             objectInputStream.close();
             objectOutputStream.close();
@@ -103,14 +105,19 @@ public class PhysicalLayer {
         this.objectOutputStream = objectOutputStream;
     }
 
-    public boolean isCommunicationDone() {
-        return isCommunicationDone;
+    public int getFrameSent() {
+        return frameSent;
     }
 
-    public void setCommunicationDone(boolean communicationDone) {
-        isCommunicationDone = communicationDone;
-        if(isCommunicationDone)
-            stopPhysicalLayer();
+    public void setFrameSent(int frameSent) {
+        this.frameSent = frameSent;
     }
 
+    public int getFrameReceived() {
+        return frameReceived;
+    }
+
+    public void setFrameReceived(int frameReceived) {
+        this.frameReceived = frameReceived;
+    }
 }

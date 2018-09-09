@@ -6,9 +6,9 @@ import java.util.Scanner;
 
 
 public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener {
-    public final static int MAXIMUM_SEQUENCE = 7;
-    public static final int WINDOW_SIZE = (MAXIMUM_SEQUENCE + 1)/2;
-    public static final int OLDEST_FRAME = MAXIMUM_SEQUENCE + 1;
+    public static int MAXIMUM_SEQUENCE = 7;
+    public static int WINDOW_SIZE = (MAXIMUM_SEQUENCE + 1)/2;
+    public static int OLDEST_FRAME = MAXIMUM_SEQUENCE + 1;
     private boolean noNAK = true;
     private int acknowledgementExpected,nextFrame,frameExpected,tooFar,bufferedNum;
     private NetworkPacket outBound[];
@@ -82,12 +82,11 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
 
     public void FrameArrival() {
-        while(!physicalLayer.isCommunicationDone()) {
+        while(true) {
             Frame frame = physicalLayer.fromPhysicalLayer();
             System.out.println("Frame Arrival");
             if(frame.getFrameType() == FrameType.STOP){
-                physicalLayer.setCommunicationDone(true);
-                continue;
+                break;
             }
             if (frame.getFrameType() == FrameType.DATA) {
                 if (frame.getSequenceNumber() != frameExpected && isNoNAK())
@@ -132,12 +131,6 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
             networkLayer.enableNetworkLayer();
         else
             networkLayer.disableNetworkLayer();
-    }
-
-    @Override
-    public void onClose() {
-        Frame frame = new Frame(new NetworkPacket(0),0,0,FrameType.STOP);
-        physicalLayer.toPhysicalLayer(frame);
     }
 
     @Override

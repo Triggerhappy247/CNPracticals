@@ -13,7 +13,7 @@ public class NetworkLayer {
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
     private File file;
-    private boolean isLayerEnabled;
+    private boolean isLayerEnabled,isDone;
     private boolean isPacketSet;
     private NetworkLayerSendThread networkLayerSendThread;
     private List<NetworkEventListener> networkEventListeners = new ArrayList<>();
@@ -22,6 +22,7 @@ public class NetworkLayer {
         disableNetworkLayer();
         setPacketSet(false);
         setMode(mode);
+        setDone(false);
         try {
             if(mode == NetworkLayer.SEND)
             {
@@ -58,7 +59,7 @@ public class NetworkLayer {
             }
         }
         this.networkPacket = networkPacket;
-        setPacketSet(true);
+        isPacketSet = true;
         notify();
         if(isLayerEnabled()){
             for (NetworkEventListener nel : networkEventListeners){
@@ -69,18 +70,16 @@ public class NetworkLayer {
 
     public void toNetworkLayer(NetworkPacket networkPacket){
         try {
+            packetsReceived++;
+            System.out.println(packetsReceived + " Packets Received");
             if(networkPacket.getPacketType() == NetworkPacket.DATA){
-                fileOutputStream.write(networkPacket.getData());
-                packetsReceived++;
-                System.out.println(packetsReceived + " Packets Received");
+                fileOutputStream.write(networkPacket.getData(),0,networkPacket.getSize());
             }
             else if(networkPacket.getPacketType() == NetworkPacket.STOP){
+                System.out.println("Receiver Network Layer STOP");
+                setDone(true);
                 fileOutputStream.close();
-                for (NetworkEventListener nel : networkEventListeners){
-                    nel.onClose();
-                }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -97,6 +96,8 @@ public class NetworkLayer {
         NetworkPacket networkPacket = getNetworkPacket();
         packetSent++;
         System.out.println(packetSent + " Packets Sent");
+        if(networkPacket.getPacketType() == NetworkPacket.STOP)
+            System.out.println("STOP Packet");
         setPacketSet(false);
         notify();
         return networkPacket;
@@ -110,21 +111,15 @@ public class NetworkLayer {
     //Test Successful
     public static void main(String args[]){
         System.out.println("Testing Network Layer");
-        NetworkLayer networkLayerSend = new NetworkLayer("C:/Users/qasim/Desktop/Send/1.pdf",NetworkLayer.SEND);
-        NetworkLayer networkLayerReceive = new NetworkLayer("C:/Users/qasim/Desktop/Receive/1.pdf",NetworkLayer.RECEIVE);
+        NetworkLayer networkLayerSend = new NetworkLayer("C:/Users/qasim/Desktop/Send/small.txt",NetworkLayer.SEND);
+        NetworkLayer networkLayerReceive = new NetworkLayer("C:/Users/qasim/Desktop/Receive/small.txt",NetworkLayer.RECEIVE);
         System.out.println("Networks Declared");
         class Test implements NetworkEventListener{
             @Override
             public void onNetworkLayerReady() {
                 networkLayerReceive.toNetworkLayer(networkLayerSend.fromNetworkLayer());
             }
-
-            @Override
-            public void onClose() {
-                System.out.println("Done");
-            }
         }
-
         Test test = new Test();
         networkLayerSend.addNetworkEventListener(test);
         networkLayerReceive.addNetworkEventListener(test);
@@ -205,6 +200,14 @@ public class NetworkLayer {
 
     public void setNetworkLayerSendThread(NetworkLayerSendThread networkLayerSendThread) {
         this.networkLayerSendThread = networkLayerSendThread;
+    }
+
+    public boolean isDone() {
+        return isDone;
+    }
+
+    public void setDone(boolean done) {
+        isDone = done;
     }
 
     public int getMode() {

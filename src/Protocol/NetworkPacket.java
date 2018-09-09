@@ -8,13 +8,11 @@ public class NetworkPacket implements Serializable {
     public static final int DATA = 0;
     public static final int STOP = 1;
     private int packetType;
+    private int size;
     private byte data[];
 
     public NetworkPacket() {
-    }
-
-    public NetworkPacket(int size) {
-        setData(new byte[size]);
+        setData(new byte[MAX_PKT_SIZE]);
     }
 
     public byte[] getData() {
@@ -31,5 +29,13 @@ public class NetworkPacket implements Serializable {
 
     public void setPacketType(int packetType) {
         this.packetType = packetType;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 }
