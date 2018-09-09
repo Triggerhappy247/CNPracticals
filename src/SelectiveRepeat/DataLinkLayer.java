@@ -5,7 +5,7 @@ import Protocol.*;
 import java.util.Scanner;
 
 
-public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener, Runnable {
+public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener {
     public final static int MAXIMUM_SEQUENCE = 7;
     public static final int WINDOW_SIZE = (MAXIMUM_SEQUENCE + 1)/2;
     public static final int OLDEST_FRAME = MAXIMUM_SEQUENCE + 1;
@@ -15,7 +15,6 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
     private NetworkPacket inBound[];
     private boolean arrived[];
     private NetworkLayer networkLayer;
-    private Thread frameArrival;
     private PhysicalLayer physicalLayer;
 
     //Testing the DLL
@@ -46,14 +45,6 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
     public DataLinkLayer(NetworkLayer networkLayer,PhysicalLayer physicalLayer) {
         this.networkLayer = networkLayer;
         this.physicalLayer = physicalLayer;
-
-        Protocol.FRAME_TIMER.addFrameTimerListener(this);
-        Protocol.ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(this);
-        networkLayer.addNetworkEventListener(this);
-        if(networkLayer.getMode() == NetworkLayer.SEND) {
-            networkLayer.enableNetworkLayer();
-            networkLayer.startReading();
-        }
         acknowledgementExpected = 0;
         nextFrame = 0;
         frameExpected = 0;
@@ -62,8 +53,16 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         arrived = new boolean[WINDOW_SIZE];
         outBound = new NetworkPacket[WINDOW_SIZE];
         inBound = new NetworkPacket[WINDOW_SIZE];
-        frameArrival = new Thread(this);
-        frameArrival.start();
+        Protocol.FRAME_TIMER.addFrameTimerListener(this);
+        Protocol.ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(this);
+        networkLayer.addNetworkEventListener(this);
+        if(networkLayer.getMode() == NetworkLayer.SEND) {
+            networkLayer.enableNetworkLayer();
+            networkLayer.startReading();
+        }
+        //frameArrival = new Thread(this);
+        //frameArrival.start();
+        this.FrameArrival();
     }
 
     public static boolean isBetween(int a, int b, int c){
@@ -78,11 +77,11 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         System.out.println("Sending Frame " + sequenceNumber);
         if(frameType == FrameType.DATA)
             Protocol.start_timer(sequenceNumber % WINDOW_SIZE);
-        //Protocol.stop_ack_timer();
+        Protocol.stop_ack_timer();
     }
 
-    @Override
-    public void run() {
+
+    public void FrameArrival() {
         while(!physicalLayer.isCommunicationDone()) {
             Frame frame = physicalLayer.fromPhysicalLayer();
             System.out.println("Frame Arrival");
@@ -119,7 +118,6 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
             else
                 networkLayer.disableNetworkLayer();
         }
-
     }
 
     @Override
