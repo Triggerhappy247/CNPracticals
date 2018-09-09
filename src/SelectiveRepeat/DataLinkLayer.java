@@ -5,7 +5,7 @@ import Protocol.*;
 import java.util.Scanner;
 
 
-public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener {
+public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener, FrameArrivalListener{
     public static int MAXIMUM_SEQUENCE = 7;
     public static int WINDOW_SIZE = (MAXIMUM_SEQUENCE + 1)/2;
     public static int OLDEST_FRAME = MAXIMUM_SEQUENCE + 1;
@@ -56,13 +56,11 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         Protocol.FRAME_TIMER.addFrameTimerListener(this);
         Protocol.ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(this);
         networkLayer.addNetworkEventListener(this);
+        physicalLayer.addFrameArrivalListeners(this);
         if(networkLayer.getMode() == NetworkLayer.SEND) {
             networkLayer.enableNetworkLayer();
             networkLayer.startReading();
         }
-        //frameArrival = new Thread(this);
-        //frameArrival.start();
-        this.FrameArrival();
     }
 
     public static boolean isBetween(int a, int b, int c){
@@ -80,43 +78,43 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         Protocol.stop_ack_timer();
     }
 
-
-    public void FrameArrival() {
-        while(true) {
-            Frame frame = physicalLayer.fromPhysicalLayer();
-            System.out.println("Frame Arrival");
-            if(frame.getFrameType() == FrameType.STOP){
-                break;
-            }
-            if (frame.getFrameType() == FrameType.DATA) {
-                if (frame.getSequenceNumber() != frameExpected && isNoNAK())
-                    sendFrame(FrameType.NAK, 0, frameExpected, outBound);
-                if (isBetween(frameExpected, frame.getSequenceNumber(), tooFar) && !arrived[frame.getSequenceNumber() % WINDOW_SIZE]) {
-                    arrived[frame.getSequenceNumber() % WINDOW_SIZE] = true;
-                    inBound[frame.getSequenceNumber() % WINDOW_SIZE] = frame.getNetworkPacket();
-                    while (arrived[frameExpected % WINDOW_SIZE]) {
-                        networkLayer.toNetworkLayer(inBound[frameExpected % WINDOW_SIZE]);
-                        setNoNAK(true);
-                        arrived[frameExpected % WINDOW_SIZE] = false;
-                        setFrameExpected(Protocol.increment(frameExpected));
-                        setTooFar(Protocol.increment(tooFar));
-                        Protocol.start_ack_timer();
-                    }
+    @Override
+    public void onFrameArrival() {
+        Frame frame = physicalLayer.fromPhysicalLayer();
+        System.out.println("Frame Arrival");
+        if(frame.getFrameType() == FrameType.STOP){
+            networkLayer.toNetworkLayer(frame.getNetworkPacket());
+            physicalLayer.stopPhysicalLayer();
+            return;
+        }
+        if (frame.getFrameType() == FrameType.DATA) {
+            if (frame.getSequenceNumber() != frameExpected && isNoNAK())
+                sendFrame(FrameType.NAK, 0, frameExpected, outBound);
+            if (isBetween(frameExpected, frame.getSequenceNumber(), tooFar) && !arrived[frame.getSequenceNumber() % WINDOW_SIZE]) {
+                arrived[frame.getSequenceNumber() % WINDOW_SIZE] = true;
+                inBound[frame.getSequenceNumber() % WINDOW_SIZE] = frame.getNetworkPacket();
+                while (arrived[frameExpected % WINDOW_SIZE]) {
+                    networkLayer.toNetworkLayer(inBound[frameExpected % WINDOW_SIZE]);
+                    setNoNAK(true);
+                    arrived[frameExpected % WINDOW_SIZE] = false;
+                    setFrameExpected(Protocol.increment(frameExpected));
+                    setTooFar(Protocol.increment(tooFar));
+                    Protocol.start_ack_timer();
                 }
             }
-            if((frame.getFrameType() == FrameType.NAK) && isBetween(acknowledgementExpected,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),nextFrame))
-                sendFrame(FrameType.DATA,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),frameExpected,outBound);
-            while (isBetween(acknowledgementExpected, frame.getAcknowledgmentNumber(), nextFrame)) {
-                    bufferedNum--;
-                    Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
-                    setAcknowledgementExpected(Protocol.increment(acknowledgementExpected));
-            }
-            System.out.println("OnDecrement Buffered: " + bufferedNum);
-            if(bufferedNum < WINDOW_SIZE)
-                networkLayer.enableNetworkLayer();
-            else
-                networkLayer.disableNetworkLayer();
         }
+        if((frame.getFrameType() == FrameType.NAK) && isBetween(acknowledgementExpected,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),nextFrame))
+            sendFrame(FrameType.DATA,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),frameExpected,outBound);
+        while (isBetween(acknowledgementExpected, frame.getAcknowledgmentNumber(), nextFrame)) {
+            bufferedNum--;
+            Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
+            setAcknowledgementExpected(Protocol.increment(acknowledgementExpected));
+        }
+        System.out.println("OnDecrement Buffered: " + bufferedNum);
+        if(bufferedNum < WINDOW_SIZE)
+            networkLayer.enableNetworkLayer();
+        else
+            networkLayer.disableNetworkLayer();
     }
 
     @Override
@@ -124,6 +122,12 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         System.out.println("Network Layer Ready");
         bufferedNum++;
         outBound[nextFrame % WINDOW_SIZE] = networkLayer.fromNetworkLayer();
+        if(outBound[nextFrame % WINDOW_SIZE].getPacketType() == NetworkPacket.STOP) {
+            sendFrame(FrameType.STOP, nextFrame, frameExpected, outBound);
+            setNextFrame(Protocol.increment(nextFrame));
+            physicalLayer.stopPhysicalLayer();
+            return;
+        }
         sendFrame(FrameType.DATA,nextFrame,frameExpected,outBound);
         setNextFrame(Protocol.increment(nextFrame));
         System.out.println("OnIncrement Buffered: " + bufferedNum);
