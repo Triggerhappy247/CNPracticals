@@ -96,8 +96,16 @@ public class NetworkLayer {
         NetworkPacket networkPacket = getNetworkPacket();
         packetSent++;
         System.out.println(packetSent + " Packets Sent");
-        if(networkPacket.getPacketType() == NetworkPacket.STOP)
+        if(networkPacket.getPacketType() == NetworkPacket.STOP) {
+            System.out.println("Sender Network Layer STOP");
             System.out.println("STOP Packet");
+            setDone(true);
+            try {
+                fileInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         setPacketSet(false);
         notify();
         return networkPacket;

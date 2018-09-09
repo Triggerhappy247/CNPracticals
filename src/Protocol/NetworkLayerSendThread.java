@@ -50,9 +50,6 @@ public class NetworkLayerSendThread implements Runnable{
             networkPacket = new NetworkPacket();
             networkPacket.setPacketType(NetworkPacket.STOP);
             networkLayer.setNetworkPacket(networkPacket);
-            networkLayer.getFileInputStream().close();
-            networkLayer.setDone(true);
-            System.out.println("Sender Network Layer STOP");
         } catch (IOException e) {
                 e.printStackTrace();
         }

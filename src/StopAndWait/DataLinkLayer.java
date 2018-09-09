@@ -52,14 +52,9 @@ public class DataLinkLayer{
                 nextFrame = 1 - nextFrame;
             }
         }while (!networkLayer.isDone());
-        frame = new Frame(new NetworkPacket(),0,0,FrameType.STOP);
+        frame = new Frame(networkPacket,0,0,FrameType.STOP);
         System.out.println("STOP Frame");
         physicalLayer.toPhysicalLayer(frame);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         physicalLayer.stopPhysicalLayer();
     }
 
@@ -68,8 +63,10 @@ public class DataLinkLayer{
         Frame sendFrame,receiveFrame;
         do{
             receiveFrame = physicalLayer.fromPhysicalLayer();
-            if(receiveFrame.getFrameType() == FrameType.STOP)
+            if(receiveFrame.getFrameType() == FrameType.STOP) {
+                networkLayer.toNetworkLayer(receiveFrame.getNetworkPacket());
                 break;
+            }
             if(receiveFrame.getSequenceNumber() == frameExpected){
                 networkLayer.toNetworkLayer(receiveFrame.getNetworkPacket());
                 frameExpected = 1 - frameExpected;

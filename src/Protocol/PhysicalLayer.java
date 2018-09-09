@@ -65,10 +65,11 @@ public class PhysicalLayer {
     public void stopPhysicalLayer(){
         System.out.println("Physical Layer Done");
         try {
+            Thread.sleep(1000);
             objectInputStream.close();
             objectOutputStream.close();
             socket.close();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
