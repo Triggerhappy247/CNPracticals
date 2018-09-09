@@ -49,8 +49,8 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
         Protocol.FRAME_TIMER.addFrameTimerListener(this);
         Protocol.ACKNOWLEDGE_TIMER.addAcknowledgementTimerListener(this);
+        networkLayer.addNetworkEventListener(this);
         if(networkLayer.getMode() == NetworkLayer.SEND) {
-            networkLayer.addNetworkEventListener(this);
             networkLayer.enableNetworkLayer();
             networkLayer.startReading();
         }
@@ -70,7 +70,7 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         return (((a <= b) && (b < c)) || ((c < a) && (a <= b)) || ((b < c) && (c < a)));
     }
 
-    synchronized public void sendFrame(int frameType,int sequenceNumber,int frameExpected,NetworkPacket networkPacket[]){
+    public void sendFrame(int frameType,int sequenceNumber,int frameExpected,NetworkPacket networkPacket[]){
         Frame frame = new Frame(networkPacket[sequenceNumber % WINDOW_SIZE],sequenceNumber,(frameExpected + MAXIMUM_SEQUENCE) % (MAXIMUM_SEQUENCE + 1),frameType);
         if(frameType == FrameType.NAK)
             setNoNAK(false);
@@ -83,9 +83,13 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
 
     @Override
     public void run() {
-        while(true) {
+        while(!physicalLayer.isCommunicationDone()) {
             Frame frame = physicalLayer.fromPhysicalLayer();
             System.out.println("Frame Arrival");
+            if(frame.getFrameType() == FrameType.STOP){
+                physicalLayer.setCommunicationDone(true);
+                continue;
+            }
             if (frame.getFrameType() == FrameType.DATA) {
                 if (frame.getSequenceNumber() != frameExpected && isNoNAK())
                     sendFrame(FrameType.NAK, 0, frameExpected, outBound);
@@ -97,19 +101,19 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
                         setNoNAK(true);
                         arrived[frameExpected % WINDOW_SIZE] = false;
                         setFrameExpected(Protocol.increment(frameExpected));
-                        setTooFar(Protocol.increment(frameExpected));
-                        onAcknowledgementTimeout();
-                        //Protocol.start_ack_timer();
+                        setTooFar(Protocol.increment(tooFar));
+                        Protocol.start_ack_timer();
                     }
                 }
             }
             if((frame.getFrameType() == FrameType.NAK) && isBetween(acknowledgementExpected,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),nextFrame))
                 sendFrame(FrameType.DATA,(frame.getAcknowledgmentNumber()+1) % (MAXIMUM_SEQUENCE + 1),frameExpected,outBound);
-            while (isBetween(acknowledgementExpected,frame.getAcknowledgmentNumber(),nextFrame)){
-                bufferedNum--;
-                Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
-                setAcknowledgementExpected(Protocol.increment(acknowledgementExpected));
+            while (isBetween(acknowledgementExpected, frame.getAcknowledgmentNumber(), nextFrame)) {
+                    bufferedNum--;
+                    Protocol.stop_timer(acknowledgementExpected % WINDOW_SIZE);
+                    setAcknowledgementExpected(Protocol.increment(acknowledgementExpected));
             }
+            System.out.println("OnDecrement Buffered: " + bufferedNum);
             if(bufferedNum < WINDOW_SIZE)
                 networkLayer.enableNetworkLayer();
             else
@@ -125,30 +129,29 @@ public class DataLinkLayer implements NetworkEventListener, TimeoutEventListener
         outBound[nextFrame % WINDOW_SIZE] = networkLayer.fromNetworkLayer();
         sendFrame(FrameType.DATA,nextFrame,frameExpected,outBound);
         setNextFrame(Protocol.increment(nextFrame));
+        System.out.println("OnIncrement Buffered: " + bufferedNum);
         if(bufferedNum < WINDOW_SIZE)
             networkLayer.enableNetworkLayer();
         else
             networkLayer.disableNetworkLayer();
+    }
+
+    @Override
+    public void onClose() {
+        Frame frame = new Frame(new NetworkPacket(0),0,0,FrameType.STOP);
+        physicalLayer.toPhysicalLayer(frame);
     }
 
     @Override
     public void onFrameTimeout() {
         System.out.println("Frame TimeOut");
         sendFrame(FrameType.DATA,OLDEST_FRAME,frameExpected,outBound);
-        if(bufferedNum < WINDOW_SIZE)
-            networkLayer.enableNetworkLayer();
-        else
-            networkLayer.disableNetworkLayer();
     }
 
     @Override
     public void onAcknowledgementTimeout() {
-        System.out.println("Acknowledgement Timeout");
+        System.out.println("Sending Acknowledgment");
         sendFrame(FrameType.ACK,0,frameExpected,outBound);
-        if(bufferedNum < WINDOW_SIZE)
-            networkLayer.enableNetworkLayer();
-        else
-            networkLayer.disableNetworkLayer();
     }
 
     public boolean isNoNAK() {

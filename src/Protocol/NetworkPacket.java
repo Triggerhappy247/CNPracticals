@@ -6,6 +6,7 @@ import java.io.Serializable;
 public class NetworkPacket implements Serializable {
     public transient static final int MAX_PKT_SIZE = 1024;
     public static final int DATA = 0;
+    public static final int STOP = 1;
     private int packetType;
     private byte data[];
 

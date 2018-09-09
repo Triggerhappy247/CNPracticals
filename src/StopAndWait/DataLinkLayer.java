@@ -12,6 +12,11 @@ public class DataLinkLayer implements Runnable, NetworkEventListener, TimeoutEve
     }
 
     @Override
+    public void onClose() {
+
+    }
+
+    @Override
     public void onFrameTimeout() {
 
     }

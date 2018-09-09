@@ -9,7 +9,6 @@ public class NetworkLayer {
     public static final int SEND = 0;
     public static final int RECEIVE = 1;
     private int packetsReceived, packetSent,mode;
-    private int fileSize;
     private NetworkPacket networkPacket;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
@@ -74,11 +73,12 @@ public class NetworkLayer {
                 fileOutputStream.write(networkPacket.getData());
                 packetsReceived++;
                 System.out.println(packetsReceived + " Packets Received");
-                if(packetsReceived == fileSize)
-                    fileOutputStream.close();
             }
-            else {
-                setFileSize(networkPacket.getPacketType());
+            else if(networkPacket.getPacketType() == NetworkPacket.STOP){
+                fileOutputStream.close();
+                for (NetworkEventListener nel : networkEventListeners){
+                    nel.onClose();
+                }
             }
 
         } catch (IOException e) {
@@ -110,20 +110,24 @@ public class NetworkLayer {
     //Test Successful
     public static void main(String args[]){
         System.out.println("Testing Network Layer");
-        NetworkLayer networkLayerSend = new NetworkLayer("C:/Users/qasim/Desktop/Send/Star Wars The Clone Wars - S01E01.mp4",NetworkLayer.SEND);
-        NetworkLayer networkLayerReceive = new NetworkLayer("C:/Users/qasim/Desktop/Receive/Star Wars The Clone Wars - S01E01.mp4",NetworkLayer.RECEIVE);
+        NetworkLayer networkLayerSend = new NetworkLayer("C:/Users/qasim/Desktop/Send/1.pdf",NetworkLayer.SEND);
+        NetworkLayer networkLayerReceive = new NetworkLayer("C:/Users/qasim/Desktop/Receive/1.pdf",NetworkLayer.RECEIVE);
         System.out.println("Networks Declared");
         class Test implements NetworkEventListener{
             @Override
             public void onNetworkLayerReady() {
                 networkLayerReceive.toNetworkLayer(networkLayerSend.fromNetworkLayer());
-                System.out.println(networkLayerReceive.getPacketsReceived() + " Packets Received");
             }
 
+            @Override
+            public void onClose() {
+                System.out.println("Done");
+            }
         }
 
         Test test = new Test();
         networkLayerSend.addNetworkEventListener(test);
+        networkLayerReceive.addNetworkEventListener(test);
         networkLayerSend.enableNetworkLayer();
         networkLayerSend.startReading();
     }
@@ -191,14 +195,6 @@ public class NetworkLayer {
         this.packetSent = packetSent;
     }
 
-    public int getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(int fileSize) {
-        this.fileSize = fileSize;
-    }
-
     public File getFile() {
         return file;
     }
@@ -217,5 +213,9 @@ public class NetworkLayer {
 
     public void setMode(int mode) {
         this.mode = mode;
+    }
+
+    public List<NetworkEventListener> getNetworkEventListeners() {
+        return networkEventListeners;
     }
 }

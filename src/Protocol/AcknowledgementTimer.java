@@ -21,16 +21,20 @@ public class AcknowledgementTimer {
 
 
     public void startAcknowledgementTimer(){
-        Timer timer = new Timer();
-        acknowledgementTimeOut = new AcknowledgementTimeOut(this);
-        System.out.println("Acknowledgement Timer Started");
-        timer.schedule(acknowledgementTimeOut,0);
+        if(timer == null)
+        {
+            Timer timer = new Timer();
+            acknowledgementTimeOut = new AcknowledgementTimeOut(this);
+            System.out.println("Acknowledgement Timer Started");
+            timer.schedule(acknowledgementTimeOut,0);
+        }
     }
 
     public void stopAcknowledgementTimer(){
         if(timer != null) {
             System.out.println("Acknowledgment Timer Stopped");
             timer.cancel();
+            timer = null;
         }
     }
 }
