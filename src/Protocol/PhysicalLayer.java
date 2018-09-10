@@ -1,13 +1,10 @@
 package Protocol;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PhysicalLayer {
 
@@ -15,10 +12,6 @@ public class PhysicalLayer {
     private ServerSocket serverSocket;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
-    private BufferedInputStream bufferedInputStream;
-    private PhysicalLayerFrameArrival physicalLayerFrameArrival;
-    private List<FrameArrivalListener> frameArrivalListeners = new ArrayList<>();
-    private boolean stopFrameArrival = false;
     private int frameSent,frameReceived;
 
     public PhysicalLayer(int port) {
@@ -29,9 +22,7 @@ public class PhysicalLayer {
             setSocket(serverSocket.accept());
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            bufferedInputStream = new BufferedInputStream(socket.getInputStream());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
-            physicalLayerFrameArrival = new PhysicalLayerFrameArrival(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,9 +35,7 @@ public class PhysicalLayer {
             setSocket(new Socket(host,port));
             System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
-            bufferedInputStream = new BufferedInputStream(socket.getInputStream());
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            physicalLayerFrameArrival = new PhysicalLayerFrameArrival(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,21 +66,12 @@ public class PhysicalLayer {
         System.out.println("Physical Layer Done");
         try {
             Thread.sleep(1000);
-            setStopFrameArrival(true);
             objectInputStream.close();
             objectOutputStream.close();
             socket.close();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public void addFrameArrivalListeners(FrameArrivalListener frameArrivalListener){
-        frameArrivalListeners.add(frameArrivalListener);
-    }
-
-    public List<FrameArrivalListener> getFrameArrivalListeners() {
-        return frameArrivalListeners;
     }
 
     public Socket getSocket() {
@@ -124,22 +104,6 @@ public class PhysicalLayer {
 
     public void setObjectOutputStream(ObjectOutputStream objectOutputStream) {
         this.objectOutputStream = objectOutputStream;
-    }
-
-    public BufferedInputStream getBufferedInputStream() {
-        return bufferedInputStream;
-    }
-
-    public boolean isStopFrameArrival() {
-        return stopFrameArrival;
-    }
-
-    public void setStopFrameArrival(boolean stopFrameArrival) {
-        this.stopFrameArrival = stopFrameArrival;
-    }
-
-    public void setBufferedInputStream(BufferedInputStream bufferedInputStream) {
-        this.bufferedInputStream = bufferedInputStream;
     }
 
     public int getFrameSent() {
