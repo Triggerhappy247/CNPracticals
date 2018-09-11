@@ -15,6 +15,10 @@ public class AcknowledgementTimer {
         timeoutEventListeners.add(timeoutEventListener);
     }
 
+    public void removeAcknowledgementTimerListener(TimeoutEventListener timeoutEventListener){
+        timeoutEventListeners.remove(timeoutEventListener);
+    }
+
     public List<TimeoutEventListener> getTimeoutEventListeners() {
         return timeoutEventListeners;
     }
@@ -26,7 +30,7 @@ public class AcknowledgementTimer {
             Timer timer = new Timer();
             acknowledgementTimeOut = new AcknowledgementTimeOut(this);
             System.out.println("Acknowledgement Timer Started");
-            timer.schedule(acknowledgementTimeOut,0);
+            timer.schedule(acknowledgementTimeOut,500);
         }
     }
 

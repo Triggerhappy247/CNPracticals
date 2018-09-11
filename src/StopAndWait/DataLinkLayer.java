@@ -2,6 +2,7 @@ package StopAndWait;
 
 import Protocol.*;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 
@@ -10,7 +11,7 @@ public class DataLinkLayer{
     private NetworkLayer networkLayer;
     private PhysicalLayer physicalLayer;
     //Testing the DLL
-    public static void main(String args[]){
+    public static void main(String args[])throws IOException{
         Scanner scanner = new Scanner(System.in);
         System.out.println("Filename: ");
         String filename = scanner.nextLine();
@@ -21,7 +22,6 @@ public class DataLinkLayer{
             case 1:
                 dataLinkLayer = new DataLinkLayer();
                 dataLinkLayer.networkLayer = new NetworkLayer(String.format("C:/Users/qasim/Desktop/Send/%s",filename),NetworkLayer.SEND);
-                dataLinkLayer.networkLayer.startReading();
                 dataLinkLayer.physicalLayer = new PhysicalLayer(800);
                 dataLinkLayer.sender();
                 break;
@@ -35,7 +35,7 @@ public class DataLinkLayer{
         }
     }
 
-    public void sender(){
+    public void sender()throws IOException{
         int nextFrame = 0;
         Frame frame = new Frame();
         NetworkPacket networkPacket;
@@ -51,7 +51,7 @@ public class DataLinkLayer{
                 networkPacket = networkLayer.fromNetworkLayer();
                 nextFrame = 1 - nextFrame;
             }
-        }while (!networkLayer.isDone());
+        }while (!networkLayer.isSendingDone());
         frame = new Frame(networkPacket,0,0,FrameType.STOP);
         System.out.println("STOP Frame");
         physicalLayer.toPhysicalLayer(frame);

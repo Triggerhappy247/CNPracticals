@@ -10,6 +10,10 @@ public class FrameTimer {
         timeoutEventListeners.add(timeoutEventListener);
     }
 
+    public void removeFrameTimerListener(TimeoutEventListener timeoutEventListener){
+        timeoutEventListeners.remove(timeoutEventListener);
+    }
+
     public List<TimeoutEventListener> getTimeoutEventListeners() {
         return timeoutEventListeners;
     }
@@ -21,7 +25,7 @@ public class FrameTimer {
         Timer frameTimer = new Timer(true);
         frameTimerMap.put(sequenceNumber,frameTimer);
         System.out.println("Timer Started for " + sequenceNumber);
-        frameTimer.schedule(new FrameTimeOut(this),1000);
+        frameTimer.schedule(new FrameTimeOut(this),5000);
     }
 
     public void stopFrameTimer(int sequenceNumber){

@@ -1,14 +1,12 @@
 package Protocol;
 
 
-import SelectiveRepeat.DataLinkLayer;
-
 public class Protocol {
     public static AcknowledgementTimer ACKNOWLEDGE_TIMER = new AcknowledgementTimer();
     public static FrameTimer FRAME_TIMER = new FrameTimer();
 
-    public static int increment(int sequenceNumber){
-        return (sequenceNumber+1) % DataLinkLayer.MAXIMUM_SEQUENCE;
+    public static int increment(int sequenceNumber,int MAXIMUM_SEQUENCE){
+        return (sequenceNumber+1) % MAXIMUM_SEQUENCE;
     }
 
     public static void start_timer(int sequenceNumber){
