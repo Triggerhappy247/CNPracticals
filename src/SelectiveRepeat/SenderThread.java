@@ -36,10 +36,6 @@ public class SenderThread implements Runnable {
                     dataLinkLayer.setNextFrame(Protocol.increment(dataLinkLayer.nextFrame,DataLinkLayer.MAXIMUM_SEQUENCE));
                     System.out.println("OnIncrement Buffered: " + dataLinkLayer.bufferedNum);
                 }
-                else{
-                    Thread.yield();
-                }
-
             }
         } catch (IOException  e) {
             e.printStackTrace();
